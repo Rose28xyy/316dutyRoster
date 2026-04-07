@@ -4,297 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>316寝室值日表</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
- 
-    /* 全局重置 */
-    *{
-         margin: 0; 
-         padding: 0; 
-         box-sizing: border-box; 
-         font-family: "PingFang SC", "Microsoft YaHei", sans-serif; 
-     }
-     html, body {
-         min-height: 100vh;
-         width: 100%;
-         background: #f5f7fa;
-         display: flex;
-         justify-content: center;
-         align-items: flex-start;
-         padding: 6px 2px;
-     }
-     /* 核心容器 */
-     .container { 
-         width: 100%;
-         background: #fff; 
-         border-radius: 16px; 
-         padding: 8px; 
-         box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-         overflow: hidden; 
-     }
-     /* 标题样式*/
-     .title-wrap {
-         width: 100%;
-         height: 50px;
-         margin-top: 8px;
-         margin-bottom: 1px;
-         display: flex;
-         justify-content: center;
-         align-items: center;
-     }
-     h1 { 
-         font-size: 28px;
-         font-weight: 700;
-         color: #1a202c; 
-         margin: 0;
-         padding: 0 10px; 
-         line-height: 1.4;
-         cursor: pointer;
-     }
-     /* 日期栏 */
-     .date-bar { 
-         padding: 4px 6px;
-         margin-bottom: 15px;
-         border-bottom: 1px solid #e2e8f0; 
-         width: 100%;
-         font-size: 16px; 
-         color: #4a5568; 
-         font-weight: 500;
-         text-align: center;
-     }
-     .date-text { display: block; text-align: center; }
-     .tag { 
-         display: inline-block; 
-         margin-left: 8px; 
-         padding: 4px 10px; 
-         font-size: 12px; 
-         border-radius: 12px; 
-     }
-     .holiday-tag { background: #fc8181; color: white; }
-     .workday-tag { background: #48bb78; color: white; }
-     .promise-tag { background: #805ad5; color: white; }
-     .leave-tag { background: #ed8936; color: white; }
-     .main-content.hidden { display: none; }
-     /* 值日表 */
-     .duty-list { 
-         margin-bottom: 20px; 
-         border-radius: 10px;
-         overflow: hidden;
-         border: 1px solid #edf2f7;
-     }
-     .duty-header { 
-         display: flex; 
-         background: #f7fafc; 
-     }
-     .duty-header-item { 
-         padding: 14px; 
-         font-size: 14px; 
-         color: #4a5568; 
-         font-weight: 600;
-         text-align: center;
-     }
-     .duty-header-item:nth-child(1) { flex: 0 0 30%; }
-     .duty-header-item:nth-child(2) { flex: 0 0 70%; }
-     .duty-item { 
-         display: flex; 
-         border-bottom: 1px solid #edf2f7; 
-         align-items: center; 
-     }
-     .duty-item:last-child {
-         border-bottom: none;
-         border-radius: 0 0 10px 10px;
-     }
-     .duty-name { 
-         flex: 0 0 30%; 
-         padding: 14px; 
-         text-align: center; 
-         font-size: 15px; 
-         color: #2d3748; 
-     }
-     .duty-task { 
-         flex: 0 0 70%; 
-         padding: 8px; 
-         font-size: 15px; 
-         color: #2d3748; 
-         text-align: center; 
-     }
-     .rest { color: #a0aec0; font-style: italic; }
-     .duty-content { 
-         display: inline-flex; 
-         align-items: center; 
-         gap: 4px; 
-         justify-content: center;
-     }
-     .duty-pos { font-size: 14px; color: #718096; }
-     .duty-detail { font-size: 14px; color: #2d3748; font-weight: 500; }
-     .duty-multi-task { 
-         display: flex; 
-         flex-direction: column; 
-         gap: 6px; 
-         margin-top: 4px; 
-         align-items: center; 
-     }
-     .duty-task-item { 
-         padding: 4px 8px; 
-         background: #f7fafc; 
-         border-radius: 6px; 
-         width: 100%;
-     }
-     /* 按钮组 */
-     .btn-group { 
-         display: flex; 
-         gap: 10px; 
-         margin-bottom: 15px; 
-         flex-wrap: wrap; 
-         justify-content: center;
-     }
-     .btn { 
-         flex: 1; 
-         min-width: 100px; 
-         padding: 12px; 
-         border: none; 
-         border-radius: 10px; 
-         font-size: 14px; 
-         cursor: pointer; 
-         text-align: center; 
-         font-weight: 500;
-     }
-     .calibrate-btn { 
-         display: none; 
-         background: #3182ce; 
-         color: white; 
-     }
-     .future-btn { background: #e2e8f0; color: #4a5568; }
-     .leave-btn { background: #ed8936; color: white; }
-     .sync-status { text-align: center; font-size: 12px; margin: 5px 0; height: 16px; }
-     .sync-status.success { color: #38a169; }
-     .sync-status.error { color: #e53e3e; }
-     /* 面板样式 */
-     .calibrate-panel, .future-panel, .leave-panel { 
-         margin-top: 15px; 
-         padding: 8px; 
-         background: #f7fafc; 
-         border-radius: 12px; 
-         display: none; 
-     }
-     .calibrate-panel.show, .future-panel.show, .leave-panel.show { display: block; }
-     .form-item { margin-bottom: 16px; }
-     .form-item label { 
-         display: block; 
-         font-size: 14px; 
-         color: #4a5568; 
-         margin-bottom: 6px; 
-         font-weight: 500;
-     }
-     .form-item input, .form-item select { 
-         width: 100%; 
-         padding: 10px; 
-         border: 1px solid #cbd5e0; 
-         border-radius: 8px; 
-         font-size: 14px; 
-         background: white;
-     }
-     .submit-btn { 
-         width: 100%; 
-         padding: 12px; 
-         background: #38a169; 
-         color: white; 
-         border: none; 
-         border-radius: 8px; 
-         font-size: 14px; 
-         cursor: pointer; 
-         font-weight: 500;
-     }
-     .tip { 
-         text-align: center; 
-         font-size: 13px; 
-         color: #718096; 
-         margin-top: 10px; 
-         line-height: 1.5; 
-     }
-     .preview-section { 
-         margin-top: 15px; 
-         padding: 4px; 
-         background: white; 
-         border-radius: 10px; 
-         box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-     }
-     .preview-title { 
-         font-size: 16px; 
-         font-weight: 600; 
-         margin-bottom: 12px; 
-         color: #2d3748; 
-         text-align: center;
-     }
-     .preview-item { 
-         display: flex; 
-         align-items: center; 
-         justify-content: space-between;
-         gap: 8px; 
-         margin-bottom: 8px; 
-         padding: 10px; 
-         background: #f7fafc; 
-         border-radius: 8px; 
-     }
-     .preview-name { 
-         font-size: 15px; 
-         color: #2d3748; 
-         min-width: 80px;
-         text-align: center;
-     }
-     .preview-task { 
-         display: flex; 
-         align-items: center; 
-         gap: 4px; 
-         flex-wrap: wrap;
-         justify-content: center;
-     }
-     .preview-pos { font-size: 14px; color: #718096; }
-     .preview-detail { font-size: 14px; color: #2d3748; font-weight: 500; }
-     .today-btn, .clear-storage { 
-         margin-top: 10px; 
-         padding: 10px; 
-         color: white; 
-         border: none; 
-         border-radius: 8px; 
-         font-size: 14px; 
-         cursor: pointer; 
-         width: 100%; 
-         font-weight: 500;
-     }
-     .today-btn { background: #3182ce; }
-     .clear-storage { background: #e53e3e; }
-     .future-date-display { 
-         text-align: center; 
-         font-size: 18px; 
-         font-weight: 600; 
-         margin-bottom: 15px; 
-         color: #2d3748;
-     }
-     .future-date-tag { 
-         display: inline-block; 
-         margin-left: 8px; 
-         padding: 4px 10px; 
-         font-size: 12px; 
-         border-radius: 12px; 
-         background: #3182ce; 
-         color: white;
-     }
-     .section-title { 
-         font-size: 18px; 
-         font-weight: 600; 
-         margin-bottom: 15px; 
-         color: #2d3748; 
-         text-align: center;
-     }
-     /* 响应式适配 */
-     @media (max-width: 375px) {
-         h1 { font-size: 24px; }
-         .duty-name, .duty-task { padding: 10px 8px; }
-         .duty-content, .preview-task { gap: 2px; }
-         .duty-pos, .duty-detail, .preview-pos, .preview-detail { font-size: 13px; }
-         .btn, .submit-btn, .today-btn, .clear-storage { padding: 10px; font-size: 13px; }
-         .preview-name { min-width: 60px; font-size: 14px; }
- }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+        html, body { min-height: 100vh; width: 100%; background: #f5f7fa; display: flex; justify-content: center; align-items: flex-start; padding: 6px 2px; }
+        .container { width: 100%; background: #fff; border-radius: 16px; padding: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .title-wrap { width: 100%; height: 50px; margin-top: 8px; margin-bottom: 1px; display: flex; justify-content: center; align-items: center; }
+        h1 { font-size: 28px; font-weight: 700; color: #1a202c; margin: 0; padding: 0 10px; line-height: 1.4; cursor: pointer; }
+        .date-bar { padding: 4px 6px; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; width: 100%; font-size: 16px; color: #4a5568; font-weight: 500; text-align: center; }
+        .date-text { display: block; text-align: center; }
+        .tag { display: inline-block; margin-left: 8px; padding: 4px 10px; font-size: 12px; border-radius: 12px; }
+        .holiday-tag { background: #fc8181; color: white; }
+        .workday-tag { background: #48bb78; color: white; }
+        .promise-tag { background: #805ad5; color: white; }
+        .leave-tag { background: #ed8936; color: white; }
+        .main-content.hidden { display: none; }
+        .duty-list { margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #edf2f7; }
+        .duty-header { display: flex; background: #f7fafc; }
+        .duty-header-item { padding: 14px; font-size: 14px; color: #4a5568; font-weight: 600; text-align: center; }
+        .duty-header-item:nth-child(1) { flex: 0 0 30%; }
+        .duty-header-item:nth-child(2) { flex: 0 0 70%; }
+        .duty-item { display: flex; border-bottom: 1px solid #edf2f7; align-items: center; }
+        .duty-item:last-child { border-bottom: none; border-radius: 0 0 10px 10px; }
+        .duty-name { flex: 0 0 30%; padding: 14px; text-align: center; font-size: 15px; color: #2d3748; }
+        .duty-task { flex: 0 0 70%; padding: 8px; font-size: 15px; color: #2d3748; text-align: center; }
+        .rest { color: #a0aec0; font-style: italic; }
+        .duty-content { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+        .duty-pos { font-size: 14px; color: #718096; }
+        .duty-detail { font-size: 14px; color: #2d3748; font-weight: 500; }
+        .duty-multi-task { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; align-items: center; }
+        .duty-task-item { padding: 4px 8px; background: #f7fafc; border-radius: 6px; width: 100%; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+        .btn { flex: 1; min-width: 100px; padding: 12px; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; text-align: center; font-weight: 500; }
+        .calibrate-btn { display: none; background: #3182ce; color: white; }
+        .future-btn { background: #e2e8f0; color: #4a5568; }
+        .leave-btn { background: #ed8936; color: white; }
+        .log-btn { background: #805ad5; color: white; }
+        .sync-status { text-align: center; font-size: 12px; margin: 5px 0; height: 16px; }
+        .sync-status.success { color: #38a169; }
+        .sync-status.error { color: #e53e3e; }
+        .calibrate-panel, .future-panel, .leave-panel, .log-panel { margin-top: 15px; padding: 8px; background: #f7fafc; border-radius: 12px; display: none; }
+        .calibrate-panel.show, .future-panel.show, .leave-panel.show, .log-panel.show { display: block; }
+        .form-item { margin-bottom: 16px; }
+        .form-item label { display: block; font-size: 14px; color: #4a5568; margin-bottom: 6px; font-weight: 500; }
+        .form-item input, .form-item select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; background: white; }
+        .submit-btn { width: 100%; padding: 12px; background: #38a169; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: 500; }
+        .tip { text-align: center; font-size: 13px; color: #718096; margin-top: 10px; line-height: 1.5; }
+        .preview-section { margin-top: 15px; padding: 4px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .preview-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #2d3748; text-align: center; }
+        .preview-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; padding: 10px; background: #f7fafc; border-radius: 8px; }
+        .preview-name { font-size: 15px; color: #2d3748; min-width: 80px; text-align: center; }
+        .preview-task { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: center; }
+        .today-btn, .clear-storage { margin-top: 10px; padding: 10px; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; width: 100%; font-weight: 500; }
+        .today-btn { background: #3182ce; }
+        .clear-storage { background: #e53e3e; }
+        .future-date-display { text-align: center; font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #2d3748; }
+        .future-date-tag { display: inline-block; margin-left: 8px; padding: 4px 10px; font-size: 12px; border-radius: 12px; background: #3182ce; color: white; }
+        .section-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #2d3748; text-align: center; }
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-panel { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 320px; text-align: center; }
+        .auth-panel h2 { margin-bottom: 20px; color: #2d3748; }
+        .auth-panel input { width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 16px; margin-bottom: 15px; }
+        .auth-panel button { width: 100%; padding: 12px; background: #3182ce; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .auth-error { color: #e53e3e; font-size: 14px; margin-top: 10px; }
+        .user-info { text-align: center; font-size: 13px; color: #718096; margin-bottom: 10px; }
+        .user-info .admin-badge { background: #3182ce; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 5px; }
+        .log-list { max-height: 400px; overflow-y: auto; }
+        .log-item { padding: 12px; background: white; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .log-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .log-action { font-weight: 600; color: #2d3748; }
+        .log-time { font-size: 12px; color: #718096; }
+        .log-detail { font-size: 13px; color: #4a5568; }
+        .log-operator { font-size: 12px; color: #718096; margin-top: 5px; }
+        .rollback-btn { margin-top: 8px; padding: 6px 12px; background: #e53e3e; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .confirm-dialog { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1001; }
+        .confirm-content { background: white; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .confirm-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; text-align: center; }
+        .confirm-preview { margin-bottom: 15px; padding: 10px; background: #f7fafc; border-radius: 8px; }
+        .confirm-preview h4 { margin-bottom: 10px; color: #4a5568; }
+        .confirm-buttons { display: flex; gap: 10px; }
+        .confirm-buttons button { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+        .confirm-yes { background: #38a169; color: white; }
+        .confirm-no { background: #e2e8f0; color: #4a5568; }
+        @media (max-width: 375px) {
+            h1 { font-size: 24px; }
+            .duty-name, .duty-task { padding: 10px 8px; }
+            .duty-content, .preview-task { gap: 2px; }
+            .duty-pos, .duty-detail, .preview-pos, .preview-detail { font-size: 13px; }
+            .btn, .submit-btn, .today-btn, .clear-storage { padding: 10px; font-size: 13px; }
+            .preview-name { min-width: 60px; font-size: 14px; }
+        }
     </style>
 </head>
 <body>
@@ -307,14 +106,16 @@
             <span class="tag" id="dateTag"></span>
         </div>
 
+        <div class="user-info" id="userInfo"></div>
+
         <div class="btn-group">
             <button class="btn calibrate-btn" id="calibrateBtn">手动校准</button>
             <button class="btn leave-btn" id="leaveBtn">请假调班</button>
             <button class="btn future-btn" id="futureBtn">查看排班</button>
+            <button class="btn log-btn" id="logBtn">操作日志</button>
         </div>
         <div class="sync-status" id="syncStatus"></div>
 
-        <!-- 手动校准面板 -->
         <div class="calibrate-panel" id="calibratePanel">
             <div class="section-title">手动校准值日</div>
             <div class="form-item">
@@ -338,17 +139,14 @@
                     <option value="rest">休息</option>
                 </select>
             </div>
-            
             <div class="preview-section" id="calibratePreviewSection" style="display: none;">
                 <div class="preview-title">校准预览</div>
                 <div id="calibratePreviewContent"></div>
             </div>
-            
             <button class="submit-btn" id="saveCalibrate">保存校准</button>
             <button class="clear-storage" id="clearStorage">清除所有校准记录</button>
         </div>
 
-        <!-- 请假调班面板 -->
         <div class="leave-panel" id="leavePanel">
             <div class="section-title">请假调班</div>
             <div class="form-item">
@@ -375,25 +173,21 @@
                 <label for="promiseDate">承诺替班日期</label>
                 <input type="date" id="promiseDate" required>
             </div>
-            
             <div class="preview-section" id="leavePreviewSection" style="display: none;">
                 <div class="preview-title">调班预览</div>
                 <div id="leavePreviewContent"></div>
             </div>
-            
             <button class="submit-btn" id="saveLeave">保存调班</button>
             <button class="clear-storage" id="clearLeave">清除所有调班记录</button>
             <div class="tip">规则：请假人当日休息，代班人承接双任务；承诺天请假人替代班人值日（保留自身任务）</div>
         </div>
 
-        <!-- 未来排班面板 -->
         <div class="future-panel" id="futurePanel">
             <div class="section-title">查看未来排班</div>
             <div class="form-item">
                 <label for="futureDate">选择日期</label>
                 <input type="date" id="futureDate" min="2025-09-01">
             </div>
-            
             <div class="preview-section" id="futurePreviewSection" style="display: none;">
                 <div class="future-date-display">
                     <span id="futureDateDisplay"></span>
@@ -401,12 +195,16 @@
                 </div>
                 <div id="futurePreviewContent"></div>
             </div>
-            
             <button class="submit-btn" id="viewFuture">查看排班</button>
             <button class="today-btn" id="backToToday">返回今日排班</button>
         </div>
 
-        <!-- 主要内容区域 -->
+        <div class="log-panel" id="logPanel">
+            <div class="section-title">操作日志</div>
+            <div class="log-list" id="logList"></div>
+            <button class="today-btn" id="closeLog">关闭日志</button>
+        </div>
+
         <div class="main-content" id="mainContent">
             <div class="duty-list">
                 <div class="duty-header">
@@ -415,13 +213,30 @@
                 </div>
                 <div id="dutyListBody"></div>
             </div>
-            
             <div class="tip">规则：每日递前1号位，每周一额外递前1号位；节假日休息，调休值日</div>
         </div>
     </div>
 
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-panel">
+            <h2>身份验证</h2>
+            <input type="text" id="authName" placeholder="请输入您的姓名">
+            <button id="authSubmit">确认身份</button>
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
     <script>
-        // 核心配置
+        const API_BASE = window.location.origin;
+        const ADMIN_NAME = '夏蒋全';
+        const VALID_NAMES = ['夏蒋全', '黄诗颖', '宋子慧', '方圆圆', '朱晨依'];
+        
+        let currentUser = null;
+        let isAdmin = false;
+        let socket = null;
+        let calibrateRecords = {};
+        let leaveRecords = {};
+
         const DUTY_CONFIG = {
             baseDate: new Date('2025-10-22'),
             baseRoster: [
@@ -437,15 +252,17 @@
                 'summerVacation': { start: new Date('2026-07-11'), end: new Date('2026-08-31') }
             },
             officialHolidays: {
-                '2026-01-01': '元旦', '2026-01-02': '元旦',
-                '2026-01-03': '元旦', '2026-02-16': '春节', '2026-02-17': '春节', '2026-02-18': '春节',
-                '2026-02-19': '春节', '2026-02-20': '春节', '2026-02-21': '春节', '2026-02-22': '春节',
-                '2026-02-23': '春节', '2026-04-04': '清明节', '2026-04-05': '清明节', '2026-04-06': '清明节',
-                '2026-05-01': '劳动节', '2026-05-02': '劳动节', '2026-05-03': '劳动节', '2026-05-04': '劳动节',
-                '2026-05-05': '劳动节','2026-06-19': '端午节','2026-06-20': '端午节', '2026-06-21': '端午节',
-                '2026-09-25': '中秋节', '2026-09-26': '中秋节','2026-09-27': '中秋节', '2026-10-01': '国庆节', 
-                '2026-10-02': '国庆节', '2026-10-03': '国庆节','2026-10-04': '国庆节', '2026-10-05': '国庆节',
-                '2026-10-06': '国庆节', '2026-10-07': '国庆节'
+                '2026-01-01': '元旦', '2026-01-02': '元旦', '2026-01-03': '元旦',
+                '2026-02-16': '春节', '2026-02-17': '春节', '2026-02-18': '春节',
+                '2026-02-19': '春节', '2026-02-20': '春节', '2026-02-21': '春节',
+                '2026-02-22': '春节', '2026-02-23': '春节',
+                '2026-04-04': '清明节', '2026-04-05': '清明节', '2026-04-06': '清明节',
+                '2026-05-01': '劳动节', '2026-05-02': '劳动节', '2026-05-03': '劳动节',
+                '2026-05-04': '劳动节', '2026-05-05': '劳动节',
+                '2026-06-19': '端午节', '2026-06-20': '端午节', '2026-06-21': '端午节',
+                '2026-09-25': '中秋节', '2026-09-26': '中秋节', '2026-09-27': '中秋节',
+                '2026-10-01': '国庆节', '2026-10-02': '国庆节', '2026-10-03': '国庆节',
+                '2026-10-04': '国庆节', '2026-10-05': '国庆节', '2026-10-06': '国庆节', '2026-10-07': '国庆节'
             },
             workdays: {
                 '2026-01-04': '元旦调休', '2026-02-15': '春节调休',
@@ -453,16 +270,7 @@
             }
         };
 
-        // 床号对应人名
-        const BED_TO_NAME = {
-            '2': '夏蒋全',
-            '3': '黄诗颖',
-            '4': '宋子慧',
-            '5': '方圆圆',
-            '6': '朱晨依'
-        };
-        
-        // 值日任务详情
+        const BED_TO_NAME = { '2': '夏蒋全', '3': '黄诗颖', '4': '宋子慧', '5': '方圆圆', '6': '朱晨依' };
         const DUTY_DETAILS = {
             '1': '拖寝室内 + 对齐小凳子',
             '2': '拖阳台、厕所 + 蜘蛛网',
@@ -471,7 +279,6 @@
             '5': '饮水机 + 倒垃圾'
         };
 
-        // 工具函数：格式化日期
         function formatDate(date) {
             return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         }
@@ -481,18 +288,15 @@
             return `${date.getFullYear()}年${String(date.getMonth()+1).padStart(2,'0')}月${String(date.getDate()).padStart(2,'0')}日 周${weekNames[date.getDay()]}`;
         }
 
-        // 判断日期类型
         function getDateType(date) {
             const dateStr = formatDate(date);
             const day = date.getDay();
-            
             if (date >= DUTY_CONFIG.holidays.winterVacation.start && date <= DUTY_CONFIG.holidays.winterVacation.end) {
                 return { type: 'holiday', name: '寒假' };
             }
             if (date >= DUTY_CONFIG.holidays.summerVacation.start && date <= DUTY_CONFIG.holidays.summerVacation.end) {
                 return { type: 'holiday', name: '暑假' };
             }
-            
             if (DUTY_CONFIG.officialHolidays[dateStr]) {
                 return { type: 'holiday', name: DUTY_CONFIG.officialHolidays[dateStr] };
             } else if (DUTY_CONFIG.workdays[dateStr]) {
@@ -504,98 +308,52 @@
             }
         }
 
-        // 计算递推步数
         function calculateStep(targetDate) {
             const baseTime = DUTY_CONFIG.baseDate.getTime();
             const targetTime = targetDate.getTime();
-            
             if (targetTime < baseTime) return 0;
-            
             const baseDate = new Date(DUTY_CONFIG.baseDate);
             baseDate.setHours(0, 0, 0, 0);
             const targetDateNormalized = new Date(targetDate);
             targetDateNormalized.setHours(0, 0, 0, 0);
             const totalDays = Math.floor((targetDateNormalized - baseDate) / (1000 * 60 * 60 * 24));
-            
             let step = 0;
-            
             for (let i = 1; i <= totalDays; i++) {
                 const currentDate = new Date(baseDate);
                 currentDate.setDate(baseDate.getDate() + i);
                 const dateType = getDateType(currentDate);
                 const dayOfWeek = currentDate.getDay();
-                
                 if (dateType.type === 'duty' || dateType.type === 'workday') {
                     step += 1;
-                    if (dayOfWeek === 1) {
-                        step += 1;
-                    }
+                    if (dayOfWeek === 1) step += 1;
                 }
             }
-            
             return step;
         }
 
-        // 计算工位
         function calculateDutyPos(basePos, step) {
             let finalPos = basePos - step;
             finalPos = ((finalPos - 1) % 5 + 5) % 5 + 1;
             return finalPos;
         }
 
-        // 校准计算
         function calculateCalibration(calibratedBed, calibratedPos) {
             const result = {};
-            
             if (calibratedPos === 'rest') {
                 DUTY_CONFIG.baseRoster.forEach(item => result[item.bed] = 'rest');
                 return result;
             }
-            
             const baseBed = DUTY_CONFIG.baseRoster.find(item => item.bed == calibratedBed);
             if (!baseBed) return result;
-            
             const offset = parseInt(calibratedPos) - baseBed.pos;
-            
             DUTY_CONFIG.baseRoster.forEach(item => {
                 const finalPos = calculateDutyPos(item.pos + offset, 0);
                 result[item.bed] = finalPos.toString();
             });
-            
             return result;
         }
 
-        // 请假调班 本地存储
-        function getLeaveRecords() {
-            return JSON.parse(localStorage.getItem('dutyLeave') || '{}');
-        }
-
-        function saveLeaveRecord(date, leaveData) {
-            const syncStatusEl = document.getElementById('syncStatus');
-            const leavePanel = document.getElementById('leavePanel');
-            syncStatusEl.className = 'sync-status';
-            syncStatusEl.textContent = '正在保存...';
-
-            try {
-                const leaveRecords = getLeaveRecords();
-                leaveRecords[date] = leaveData;
-                localStorage.setItem('dutyLeave', JSON.stringify(leaveRecords));
-                syncStatusEl.textContent = '调班记录保存成功';
-                syncStatusEl.classList.add('success');
-                leavePanel.classList.remove('show');
-                showMainContent();
-                generateDutyRoster(new Date());
-                
-                setTimeout(() => syncStatusEl.textContent = '', 2000);
-            } catch (err) {
-                syncStatusEl.textContent = `保存失败：${err.message}`;
-                syncStatusEl.classList.add('error');
-            }
-        }
-
-        // 检查请假/承诺日期
         function checkLeaveType(dateStr) {
-            const leaveRecords = getLeaveRecords();
             if (leaveRecords[dateStr]) {
                 return { type: 'leave', data: leaveRecords[dateStr] };
             }
@@ -607,56 +365,17 @@
             return { type: 'normal', data: null };
         }
 
-        // 校准记录 本地存储
-        function getCalibrateRecords() {
-            return JSON.parse(localStorage.getItem('dutyCalibrate') || '{}');
-        }
+        function showMainContent() { document.getElementById('mainContent').classList.remove('hidden'); }
+        function hideMainContent() { document.getElementById('mainContent').classList.add('hidden'); }
 
-        function saveCalibrateRecord(date, calibrationData) {
-            const syncStatusEl = document.getElementById('syncStatus');
-            const calibratePanel = document.getElementById('calibratePanel');
-            const calibrateBtn = document.getElementById('calibrateBtn');
-            syncStatusEl.className = 'sync-status';
-            syncStatusEl.textContent = '正在保存...';
-
-            try {
-                const calibrateRecords = getCalibrateRecords();
-                calibrateRecords[date] = calibrationData;
-                localStorage.setItem('dutyCalibrate', JSON.stringify(calibrateRecords));
-                syncStatusEl.textContent = '校准记录保存成功';
-                syncStatusEl.classList.add('success');
-                calibratePanel.classList.remove('show');
-                calibrateBtn.style.display = 'none';
-                clickCount = 0;
-                showMainContent();
-                generateDutyRoster(new Date());
-                
-                setTimeout(() => syncStatusEl.textContent = '', 2000);
-            } catch (err) {
-                syncStatusEl.textContent = `保存失败：${err.message}`;
-                syncStatusEl.classList.add('error');
-            }
-        }
-
-        // 显示/隐藏主内容
-        function showMainContent() {
-            document.getElementById('mainContent').classList.remove('hidden');
-        }
-        function hideMainContent() {
-            document.getElementById('mainContent').classList.add('hidden');
-        }
-
-        // 生成今日值日表
         function generateDutyRoster(targetDate) {
             const dutyListBody = document.getElementById('dutyListBody');
             const dateType = getDateType(targetDate);
             const dateStr = formatDate(targetDate);
-            const calibrateRecords = getCalibrateRecords();
             const leaveCheck = checkLeaveType(dateStr);
             const step = calculateStep(targetDate);
             let dutyHtml = '';
 
-            // 更新日期标签
             document.getElementById('currentDate').textContent = formatDateCN(targetDate);
             const dateTagEl = document.getElementById('dateTag');
             if (leaveCheck.type === 'leave') {
@@ -675,14 +394,12 @@
                 dateTagEl.textContent = '';
             }
 
-            // 基础工位计算
             const baseDuty = {};
             DUTY_CONFIG.baseRoster.forEach(({ bed, pos: basePos }) => {
                 baseDuty[bed] = (dateType.type === 'duty' || dateType.type === 'workday') 
                     ? calculateDutyPos(basePos, step).toString() : 'rest';
             });
 
-            // 生成值日项
             DUTY_CONFIG.baseRoster.forEach(({ bed }) => {
                 let dutyPos = baseDuty[bed];
                 let isMultiTask = false;
@@ -711,32 +428,21 @@
                 if (dutyPos === 'rest') {
                     dutyDetail = '<span class="rest">休息</span>';
                 } else if ((isMultiTask || isPromiseMulti) && multiTaskPos) {
-                    dutyDetail = `
-                        <div class="duty-multi-task">
-                            <div class="duty-task-item">
-                                <div class="duty-content">
-                                    <span class="duty-pos">${dutyPos}号位</span>
-                                    <span>-</span>
-                                    <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
-                                </div>
-                            </div>
-                            <div class="duty-task-item">
-                                <div class="duty-content">
-                                    <span class="duty-pos">${multiTaskPos}号位(代)</span>
-                                    <span>-</span>
-                                    <span class="duty-detail">${DUTY_DETAILS[multiTaskPos]}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    dutyDetail = `
-                        <div class="duty-content">
-                            <span class="duty-pos">${dutyPos}号位</span>
-                            <span>-</span>
+                    dutyDetail = `<div class="duty-multi-task">
+                        <div class="duty-task-item"><div class="duty-content">
+                            <span class="duty-pos">${dutyPos}号位</span><span>-</span>
                             <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
-                        </div>
-                    `;
+                        </div></div>
+                        <div class="duty-task-item"><div class="duty-content">
+                            <span class="duty-pos">${multiTaskPos}号位(代)</span><span>-</span>
+                            <span class="duty-detail">${DUTY_DETAILS[multiTaskPos]}</span>
+                        </div></div>
+                    </div>`;
+                } else {
+                    dutyDetail = `<div class="duty-content">
+                        <span class="duty-pos">${dutyPos}号位</span><span>-</span>
+                        <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
+                    </div>`;
                 }
 
                 dutyHtml += `<div class="duty-item">
@@ -748,16 +454,14 @@
             dutyListBody.innerHTML = dutyHtml;
         }
 
-        // 生成未来排班预览
         function generateFuturePreview(targetDate) {
             const futurePreviewContent = document.getElementById('futurePreviewContent');
             const dateType = getDateType(targetDate);
             const dateStr = formatDate(targetDate);
-            const calibrateRecords = getCalibrateRecords();
             const leaveCheck = checkLeaveType(dateStr);
             const step = calculateStep(targetDate);
             let previewHtml = '';
-        
+
             document.getElementById('futureDateDisplay').textContent = formatDateCN(targetDate);
             const futureDateTag = document.getElementById('futureDateTag');
             if (leaveCheck.type === 'leave') {
@@ -775,28 +479,24 @@
             } else {
                 futureDateTag.textContent = '';
             }
-        
+
             const baseDuty = {};
             DUTY_CONFIG.baseRoster.forEach(({ bed, pos: basePos }) => {
                 baseDuty[bed] = (dateType.type === 'duty' || dateType.type === 'workday') 
                     ? calculateDutyPos(basePos, step).toString() : 'rest';
             });
-        
-            // 新增表头
-            previewHtml += `
-            <div class="duty-list">
-                <div class="duty-header">
-                    <div class="duty-header-item">姓名</div>
-                    <div class="duty-header-item">当日负责分工</div>
-                </div>
-            `;
-        
+
+            previewHtml += `<div class="duty-list"><div class="duty-header">
+                <div class="duty-header-item">姓名</div>
+                <div class="duty-header-item">当日负责分工</div>
+            </div>`;
+
             DUTY_CONFIG.baseRoster.forEach(({ bed }) => {
                 let dutyPos = baseDuty[bed];
                 let isMultiTask = false;
                 let multiTaskPos = null;
                 let isPromiseMulti = false;
-        
+
                 if (leaveCheck.type === 'leave') {
                     const { leaver, substitute } = leaveCheck.data;
                     if (bed == leaver) dutyPos = 'rest';
@@ -814,55 +514,304 @@
                 } else if (calibrateRecords[dateStr] && calibrateRecords[dateStr][bed]) {
                     dutyPos = calibrateRecords[dateStr][bed];
                 }
-        
+
                 let taskDetail = '';
                 if (dutyPos === 'rest') {
                     taskDetail = '<span class="rest">休息</span>';
                 } else if ((isMultiTask || isPromiseMulti) && multiTaskPos) {
-                    taskDetail = `
-                        <div class="duty-multi-task">
-                            <div class="duty-task-item">
-                                <div class="duty-content">
-                                    <span class="duty-pos">${dutyPos}号位</span>
-                                    <span>-</span>
-                                    <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
-                                </div>
-                            </div>
-                            <div class="duty-task-item">
-                                <div class="duty-content">
-                                    <span class="duty-pos">${multiTaskPos}号位(代)</span>
-                                    <span>-</span>
-                                    <span class="duty-detail">${DUTY_DETAILS[multiTaskPos]}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    taskDetail = `
-                        <div class="duty-content">
-                            <span class="duty-pos">${dutyPos}号位</span>
-                            <span>-</span>
+                    taskDetail = `<div class="duty-multi-task">
+                        <div class="duty-task-item"><div class="duty-content">
+                            <span class="duty-pos">${dutyPos}号位</span><span>-</span>
                             <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
-                        </div>
-                    `;
+                        </div></div>
+                        <div class="duty-task-item"><div class="duty-content">
+                            <span class="duty-pos">${multiTaskPos}号位(代)</span><span>-</span>
+                            <span class="duty-detail">${DUTY_DETAILS[multiTaskPos]}</span>
+                        </div></div>
+                    </div>`;
+                } else {
+                    taskDetail = `<div class="duty-content">
+                        <span class="duty-pos">${dutyPos}号位</span><span>-</span>
+                        <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span>
+                    </div>`;
                 }
-        
-                // ========== 替换：和今日一致的行布局 ==========
+
                 previewHtml += `<div class="duty-item">
                     <div class="duty-name">${BED_TO_NAME[bed]}</div>
                     <div class="duty-task ${dutyPos === 'rest' ? 'rest' : ''}">${taskDetail}</div>
                 </div>`;
             });
-        
-            // ========== 闭合表格容器 ==========
+
             previewHtml += `</div>`;
-        
             futurePreviewContent.innerHTML = previewHtml;
             document.getElementById('futurePreviewSection').style.display = 'block';
         }
 
-        // 页面初始化
-        window.onload = () => {
+        async function loadRecords() {
+            try {
+                const res = await fetch(`${API_BASE}/api/records`);
+                const data = await res.json();
+                if (data.success) {
+                    calibrateRecords = data.calibrateRecords || {};
+                    leaveRecords = data.leaveRecords || {};
+                    generateDutyRoster(new Date());
+                }
+            } catch (err) {
+                console.error('加载记录失败:', err);
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const res = await fetch(`${API_BASE}/api/logs`);
+                const data = await res.json();
+                if (data.success) {
+                    renderLogs(data.logs);
+                }
+            } catch (err) {
+                console.error('加载日志失败:', err);
+            }
+        }
+
+        function renderLogs(logs) {
+            const logList = document.getElementById('logList');
+            if (!logs.length) {
+                logList.innerHTML = '<div class="tip">暂无操作记录</div>';
+                return;
+            }
+            let html = '';
+            logs.forEach(log => {
+                const actionText = {
+                    'calibrate': '校准',
+                    'leave': '请假调班',
+                    'clear_leave': '清除调班',
+                    'rollback': '回滚'
+                }[log.action] || log.action;
+
+                html += `<div class="log-item">
+                    <div class="log-item-header">
+                        <span class="log-action">${actionText}</span>
+                        <span class="log-time">${log.timestamp}</span>
+                    </div>
+                    <div class="log-detail">${log.detail || ''}</div>
+                    <div class="log-operator">操作人：${log.operator}</div>
+                    ${isAdmin && log.action !== 'rollback' ? `<button class="rollback-btn" data-id="${log.id}">回滚此操作</button>` : ''}
+                </div>`;
+            });
+            logList.innerHTML = html;
+
+            document.querySelectorAll('.rollback-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const logId = btn.dataset.id;
+                    if (confirm('确定要回滚此操作吗？')) {
+                        await rollbackOperation(logId);
+                    }
+                });
+            });
+        }
+
+        async function rollbackOperation(logId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/rollback/${logId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ operator: currentUser })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showSyncStatus('回滚成功', 'success');
+                    await loadRecords();
+                    await loadLogs();
+                } else {
+                    showSyncStatus(data.message || '回滚失败', 'error');
+                }
+            } catch (err) {
+                showSyncStatus('回滚失败: ' + err.message, 'error');
+            }
+        }
+
+        function showSyncStatus(text, type) {
+            const el = document.getElementById('syncStatus');
+            el.textContent = text;
+            el.className = 'sync-status ' + type;
+            setTimeout(() => el.textContent = '', 2000);
+        }
+
+        function showConfirmDialog(title, previewHtml, onConfirm) {
+            const dialog = document.createElement('div');
+            dialog.className = 'confirm-dialog';
+            dialog.innerHTML = `
+                <div class="confirm-content">
+                    <div class="confirm-title">${title}</div>
+                    <div class="confirm-preview">${previewHtml}</div>
+                    <div class="confirm-buttons">
+                        <button class="confirm-no">取消</button>
+                        <button class="confirm-yes">确认</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(dialog);
+
+            dialog.querySelector('.confirm-no').onclick = () => dialog.remove();
+            dialog.querySelector('.confirm-yes').onclick = () => {
+                dialog.remove();
+                onConfirm();
+            };
+        }
+
+        function checkAuth() {
+            const savedUser = localStorage.getItem('dutyUser');
+            if (savedUser && VALID_NAMES.includes(savedUser)) {
+                currentUser = savedUser;
+                isAdmin = (currentUser === ADMIN_NAME);
+                showUserInfo();
+                return true;
+            }
+            return false;
+        }
+
+        function showUserInfo() {
+            const userInfoEl = document.getElementById('userInfo');
+            userInfoEl.innerHTML = `当前用户：${currentUser}${isAdmin ? '<span class="admin-badge">管理员</span>' : ''}`;
+            if (isAdmin) {
+                document.getElementById('calibrateBtn').style.display = 'block';
+            }
+        }
+
+        function initSocket() {
+            socket = io(API_BASE);
+            socket.on('connect', () => console.log('WebSocket已连接'));
+            socket.on('data_updated', async () => {
+                console.log('数据已更新');
+                await loadRecords();
+                showSyncStatus('数据已同步', 'success');
+            });
+        }
+
+        async function saveCalibrateRecord(date, calibrationData) {
+            if (!isAdmin) {
+                showSyncStatus('只有管理员可以校准', 'error');
+                return;
+            }
+
+            const currentHtml = document.getElementById('dutyListBody').innerHTML;
+            const previewHtml = `<h4>当前排班：</h4><div class="duty-list">${currentHtml}</div>
+                <h4 style="margin-top:15px">校准后：</h4><div class="duty-list">${generatePreviewHtml(calibrationData)}</div>`;
+
+            showConfirmDialog('确认校准', previewHtml, async () => {
+                showSyncStatus('正在保存...', '');
+                try {
+                    const res = await fetch(`${API_BASE}/api/calibrate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date, calibration: calibrationData, operator: currentUser })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showSyncStatus('校准保存成功', 'success');
+                        document.getElementById('calibratePanel').classList.remove('show');
+                        showMainContent();
+                    } else {
+                        showSyncStatus(data.message || '保存失败', 'error');
+                    }
+                } catch (err) {
+                    showSyncStatus('保存失败: ' + err.message, 'error');
+                }
+            });
+        }
+
+        function generatePreviewHtml(calibration) {
+            let html = '<div class="duty-header"><div class="duty-header-item">姓名</div><div class="duty-header-item">负责分工</div></div>';
+            for (const [bed, pos] of Object.entries(calibration)) {
+                const detail = pos === 'rest' ? '<span class="rest">休息</span>' : 
+                    `<div class="duty-content"><span class="duty-pos">${pos}号位</span> - <span class="duty-detail">${DUTY_DETAILS[pos]}</span></div>`;
+                html += `<div class="duty-item"><div class="duty-name">${BED_TO_NAME[bed]}</div><div class="duty-task">${detail}</div></div>`;
+            }
+            return html;
+        }
+
+        async function saveLeaveRecord(date, leaveData) {
+            const previewHtml = `
+                <div class="preview-item"><span class="preview-name">请假人</span><span>${BED_TO_NAME[leaveData.leaver]}（当日休息）</span></div>
+                <div class="preview-item"><span class="preview-name">代班人</span><span>${BED_TO_NAME[leaveData.substitute]}（承接双任务）</span></div>
+                <div class="preview-item"><span class="preview-name">替班日</span><span>${leaveData.promiseDate}</span></div>
+            `;
+
+            showConfirmDialog('确认调班', previewHtml, async () => {
+                showSyncStatus('正在保存...', '');
+                try {
+                    const res = await fetch(`${API_BASE}/api/leave`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ date, ...leaveData, operator: currentUser })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showSyncStatus('调班保存成功', 'success');
+                        document.getElementById('leavePanel').classList.remove('show');
+                        showMainContent();
+                    } else {
+                        showSyncStatus(data.message || '保存失败', 'error');
+                    }
+                } catch (err) {
+                    showSyncStatus('保存失败: ' + err.message, 'error');
+                }
+            });
+        }
+
+        window.onload = async () => {
+            if (!checkAuth()) {
+                document.getElementById('authOverlay').style.display = 'flex';
+                document.getElementById('authSubmit').onclick = async () => {
+                    const name = document.getElementById('authName').value.trim();
+                    const errorEl = document.getElementById('authError');
+                    
+                    if (!name) {
+                        errorEl.textContent = '请输入姓名';
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`${API_BASE}/api/verify`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ name })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            currentUser = name;
+                            isAdmin = data.isAdmin;
+                            localStorage.setItem('dutyUser', name);
+                            document.getElementById('authOverlay').style.display = 'none';
+                            showUserInfo();
+                            await initApp();
+                        } else {
+                            errorEl.textContent = data.message || '验证失败';
+                        }
+                    } catch (err) {
+                        if (VALID_NAMES.includes(name)) {
+                            currentUser = name;
+                            isAdmin = (name === ADMIN_NAME);
+                            localStorage.setItem('dutyUser', name);
+                            document.getElementById('authOverlay').style.display = 'none';
+                            showUserInfo();
+                            await initApp();
+                        } else {
+                            errorEl.textContent = '姓名不在名单中';
+                        }
+                    }
+                };
+                return;
+            }
+
+            await initApp();
+        };
+
+        async function initApp() {
+            initSocket();
+            await loadRecords();
+
             const currentDate = new Date();
             const currentDateStr = formatDate(currentDate);
             const futureDateInput = document.getElementById('futureDate');
@@ -872,9 +821,6 @@
             futureDateInput.min = formatDate(DUTY_CONFIG.baseDate);
             promiseDateInput.min = formatDate(new Date(currentDate.setDate(currentDate.getDate()+1)));
 
-            generateDutyRoster(new Date());
-
-            // 标题三连击激活维护模式
             let clickCount = 0;
             const titleTrigger = document.getElementById('titleTrigger');
             const calibrateBtn = document.getElementById('calibrateBtn');
@@ -882,26 +828,22 @@
             titleTrigger.addEventListener('click', () => {
                 clickCount++;
                 if (clickCount === 3) {
-                    calibrateBtn.style.display = 'block';
+                    if (isAdmin) {
+                        calibrateBtn.style.display = calibrateBtn.style.display === 'block' ? 'none' : 'block';
+                    }
                     clickCount = 0;
-                    const syncStatusEl = document.getElementById('syncStatus');
-                    syncStatusEl.className = 'sync-status success';
-                    syncStatusEl.textContent = '维护模式已激活';
-                    setTimeout(() => syncStatusEl.textContent = '', 2000);
                 }
             });
-            
-            // 手动校准面板切换
-            document.getElementById('calibrateBtn').addEventListener('click', () => {
-                const calibratePanel = document.getElementById('calibratePanel');
-                calibratePanel.classList.toggle('show');
+
+            document.getElementById('calibrateBtn').onclick = () => {
+                document.getElementById('calibratePanel').classList.toggle('show');
                 document.getElementById('leavePanel').classList.remove('show');
                 document.getElementById('futurePanel').classList.remove('show');
-                calibratePanel.classList.contains('show') ? hideMainContent() : showMainContent();
+                document.getElementById('logPanel').classList.remove('show');
+                document.getElementById('calibratePanel').classList.contains('show') ? hideMainContent() : showMainContent();
                 document.getElementById('calibratePreviewSection').style.display = 'none';
-            });
-            
-            // 校准预览更新
+            };
+
             function updateCalibratePreview() {
                 const bed = document.getElementById('calibrateBed').value;
                 const pos = document.getElementById('calibratePos').value;
@@ -909,64 +851,71 @@
                     document.getElementById('calibratePreviewSection').style.display = 'none';
                     return;
                 }
-                const calibrationResult = calculateCalibration(bed, pos);
-                let previewHtml = '';
-                for (const [bedNum, dutyPos] of Object.entries(calibrationResult)) {
-                    let displayText = dutyPos === 'rest' ? '<span class="rest">休息</span>' : 
+                const result = calculateCalibration(bed, pos);
+                let html = '';
+                for (const [bedNum, dutyPos] of Object.entries(result)) {
+                    const text = dutyPos === 'rest' ? '<span class="rest">休息</span>' : 
                         `<div class="duty-content"><span class="duty-pos">${dutyPos}号位</span> - <span class="duty-detail">${DUTY_DETAILS[dutyPos]}</span></div>`;
-                    previewHtml += `<div class="preview-item"><span class="preview-name">${BED_TO_NAME[bedNum]}</span><span>${displayText}</span></div>`;
+                    html += `<div class="preview-item"><span class="preview-name">${BED_TO_NAME[bedNum]}</span><span>${text}</span></div>`;
                 }
-                document.getElementById('calibratePreviewContent').innerHTML = previewHtml;
+                document.getElementById('calibratePreviewContent').innerHTML = html;
                 document.getElementById('calibratePreviewSection').style.display = 'block';
             }
-            
-            document.getElementById('calibrateBed').addEventListener('change', updateCalibratePreview);
-            document.getElementById('calibratePos').addEventListener('change', updateCalibratePreview);
-            
-            // 保存校准
-            document.getElementById('saveCalibrate').addEventListener('click', () => {
+
+            document.getElementById('calibrateBed').onchange = updateCalibratePreview;
+            document.getElementById('calibratePos').onchange = updateCalibratePreview;
+
+            document.getElementById('saveCalibrate').onclick = () => {
                 const bed = document.getElementById('calibrateBed').value;
                 const pos = document.getElementById('calibratePos').value;
-                if (!bed || !pos) { alert('床号和校准号位为必填项！'); return; }
+                if (!bed || !pos) { alert('请选择床号和号位！'); return; }
                 saveCalibrateRecord(currentDateStr, calculateCalibration(bed, pos));
-            });
-            
-            // 清除校准记录
-            document.getElementById('clearStorage').addEventListener('click', () => {
-                if (confirm('确定清除所有校准记录？')) {
-                    localStorage.removeItem('dutyCalibrate');
-                    const syncStatusEl = document.getElementById('syncStatus');
-                    syncStatusEl.className = 'sync-status success';
-                    syncStatusEl.textContent = '已清除校准记录';
-                    document.getElementById('calibratePanel').classList.remove('show');
-                    calibrateBtn.style.display = 'none';
-                    showMainContent();
-                    generateDutyRoster(new Date());
-                    setTimeout(() => syncStatusEl.textContent = '', 2000);
-                }
-            });
-            
-            // 请假调班面板切换
-            document.getElementById('leaveBtn').addEventListener('click', () => {
-                const leavePanel = document.getElementById('leavePanel');
-                leavePanel.classList.toggle('show');
+            };
+
+            document.getElementById('clearStorage').onclick = async () => {
+                if (!confirm('确定清除所有校准记录？')) return;
+                showSyncStatus('正在清除...', '');
+                calibrateRecords = {};
+                await loadRecords();
+                showSyncStatus('已清除校准记录', 'success');
+                document.getElementById('calibratePanel').classList.remove('show');
+                showMainContent();
+            };
+
+            document.getElementById('leaveBtn').onclick = () => {
+                document.getElementById('leavePanel').classList.toggle('show');
                 document.getElementById('calibratePanel').classList.remove('show');
                 document.getElementById('futurePanel').classList.remove('show');
-                leavePanel.classList.contains('show') ? hideMainContent() : showMainContent();
+                document.getElementById('logPanel').classList.remove('show');
+                document.getElementById('leavePanel').classList.contains('show') ? hideMainContent() : showMainContent();
                 document.getElementById('leavePreviewSection').style.display = 'none';
-            });
-            
-            // 未来排面板切换
-            document.getElementById('futureBtn').addEventListener('click', () => {
-                const futurePanel = document.getElementById('futurePanel');
-                futurePanel.classList.toggle('show');
+            };
+
+            document.getElementById('futureBtn').onclick = () => {
+                document.getElementById('futurePanel').classList.toggle('show');
                 document.getElementById('calibratePanel').classList.remove('show');
                 document.getElementById('leavePanel').classList.remove('show');
-                futurePanel.classList.contains('show') ? hideMainContent() : showMainContent();
+                document.getElementById('logPanel').classList.remove('show');
+                document.getElementById('futurePanel').classList.contains('show') ? hideMainContent() : showMainContent();
                 document.getElementById('futurePreviewSection').style.display = 'none';
-            });
+            };
 
-            // 请假预览更新
+            document.getElementById('logBtn').onclick = async () => {
+                document.getElementById('logPanel').classList.toggle('show');
+                document.getElementById('calibratePanel').classList.remove('show');
+                document.getElementById('leavePanel').classList.remove('show');
+                document.getElementById('futurePanel').classList.remove('show');
+                document.getElementById('logPanel').classList.contains('show') ? hideMainContent() : showMainContent();
+                if (document.getElementById('logPanel').classList.contains('show')) {
+                    await loadLogs();
+                }
+            };
+
+            document.getElementById('closeLog').onclick = () => {
+                document.getElementById('logPanel').classList.remove('show');
+                showMainContent();
+            };
+
             function updateLeavePreview() {
                 const leaver = document.getElementById('leaveBed').value;
                 const substitute = document.getElementById('substituteBed').value;
@@ -977,22 +926,20 @@
                     return;
                 }
 
-                let previewHtml = `
+                const html = `
                     <div class="preview-item"><span class="preview-name">请假人</span><span>${BED_TO_NAME[leaver]}（当日休息）</span></div>
                     <div class="preview-item"><span class="preview-name">代班人</span><span>${BED_TO_NAME[substitute]}（承接双任务）</span></div>
                     <div class="preview-item"><span class="preview-name">替班日</span><span>${promiseDate}</span></div>
-                    <div class="preview-item"><span class="preview-name">规则</span><span>${promiseDate} ${BED_TO_NAME[leaver]}替${BED_TO_NAME[substitute]}值日</span></div>
                 `;
-                document.getElementById('leavePreviewContent').innerHTML = previewHtml;
+                document.getElementById('leavePreviewContent').innerHTML = html;
                 document.getElementById('leavePreviewSection').style.display = 'block';
             }
 
-            document.getElementById('leaveBed').addEventListener('change', updateLeavePreview);
-            document.getElementById('substituteBed').addEventListener('change', updateLeavePreview);
-            document.getElementById('promiseDate').addEventListener('change', updateLeavePreview);
+            document.getElementById('leaveBed').onchange = updateLeavePreview;
+            document.getElementById('substituteBed').onchange = updateLeavePreview;
+            document.getElementById('promiseDate').onchange = updateLeavePreview;
 
-            // 保存调班
-            document.getElementById('saveLeave').addEventListener('click', () => {
+            document.getElementById('saveLeave').onclick = () => {
                 const leaver = document.getElementById('leaveBed').value;
                 const substitute = document.getElementById('substituteBed').value;
                 const promiseDate = document.getElementById('promiseDate').value;
@@ -1005,39 +952,37 @@
                 }
 
                 saveLeaveRecord(currentDateStr, { leaver, substitute, promiseDate });
-            });
+            };
 
-            // 清除调班记录
-            document.getElementById('clearLeave').addEventListener('click', () => {
-                if (confirm('确定清除所有调班/承诺记录？')) {
-                    localStorage.removeItem('dutyLeave');
-                    const syncStatusEl = document.getElementById('syncStatus');
-                    syncStatusEl.className = 'sync-status success';
-                    syncStatusEl.textContent = '已清除调班记录';
+            document.getElementById('clearLeave').onclick = async () => {
+                if (!confirm('确定清除所有调班/承诺记录？')) return;
+                showSyncStatus('正在清除...', '');
+                try {
+                    await fetch(`${API_BASE}/api/clear/leave`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ operator: currentUser })
+                    });
+                    showSyncStatus('已清除调班记录', 'success');
                     document.getElementById('leavePanel').classList.remove('show');
                     showMainContent();
-                    generateDutyRoster(new Date());
-                    setTimeout(() => syncStatusEl.textContent = '', 2000);
+                } catch (err) {
+                    showSyncStatus('清除失败', 'error');
                 }
-            });
-            
-            // 查看未来排班
-            document.getElementById('viewFuture').addEventListener('click', () => {
+            };
+
+            document.getElementById('viewFuture').onclick = () => {
                 const futureDateStr = futureDateInput.value;
                 if (!futureDateStr) { alert('请选择日期！'); return; }
                 generateFuturePreview(new Date(futureDateStr));
-            });
-            
-            // 返回今日
-            document.getElementById('backToToday').addEventListener('click', () => {
+            };
+
+            document.getElementById('backToToday').onclick = () => {
                 document.getElementById('futurePanel').classList.remove('show');
                 showMainContent();
                 generateDutyRoster(new Date());
-                const syncStatusEl = document.getElementById('syncStatus');
-                syncStatusEl.className = 'sync-status success';
-                syncStatusEl.textContent = '已返回今日排班';
-                setTimeout(() => syncStatusEl.textContent = '', 2000);
-            });
+                showSyncStatus('已返回今日排班', 'success');
+            };
         };
     </script>
 </body>
