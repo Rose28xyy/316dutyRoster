@@ -1,0 +1,5 @@
+services:
+  - name: duty-316
+    type: web
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && python app.py

@@ -8,7 +8,8 @@ from flask_sqlalchemy import SQLAlchemy
 from models import db, CalibrateRecord, LeaveRecord, ModifyLog
 
 app = Flask(__name__, static_folder='../')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///duty.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'duty.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '316-duty-secret-key'
 
@@ -247,4 +248,5 @@ def handle_disconnect():
     print('客户端断开连接')
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)
